@@ -32,7 +32,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:gap="16dp">
+>
 
             <!-- POSTER PREVIEW -->
             <com.google.android.material.card.MaterialCardView
