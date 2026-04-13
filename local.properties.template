@@ -1,0 +1,16 @@
+# =====================================================
+# local.properties — NÃO COMITAR este arquivo!
+# Ele já está no .gitignore por padrão do Android.
+# =====================================================
+
+# Caminho do SDK Android (preenchido automaticamente pelo Android Studio)
+sdk.dir=/Users/SEU_USUARIO/Library/Android/sdk
+
+# Chave da API TMDB — obtenha em https://www.themoviedb.org/settings/api
+TMDB_API_KEY=cole_sua_chave_tmdb_aqui
+
+# Assinatura do APK Release (opcional — só preencha se for gerar release assinado)
+# storeFile=keystore.jks
+# storePassword=SENHA_DO_KEYSTORE
+# keyAlias=ALIAS_DA_CHAVE
+# keyPassword=SENHA_DA_CHAVE
