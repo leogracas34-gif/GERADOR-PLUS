@@ -43,7 +43,16 @@
             android:layout_height="wrap_content"
             android:text="Séries"
             android:checkable="true"/>
+
     </com.google.android.material.chip.ChipGroup>
+
+    <!-- ✅ ADICIONADO: ProgressBar para o isLoading do ViewModel -->
+    <ProgressBar
+        android:id="@+id/progressSearch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:visibility="gone"/>
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvResults"
