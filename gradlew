@@ -1,45 +1,37 @@
 #!/bin/sh
-#
-# Gradle start up script for UN*X
-#
 
-# Attempt to set APP_HOME
-# Resolve links: $0 may be a link
-PRG="$0"
-while [ -h "$PRG" ] ; do
-    ls=`ls -ld "$PRG"`
-    link=`expr "$ls" : '.*-> \(.*\)'`
-    if expr "$link" : '/.*' > /dev/null; then
-        PRG="$link"
-    else
-        PRG=`dirname "$PRG"`"/$link"
-    fi
-done
-SAVED="`pwd`"
-cd "`dirname \"$PRG\"`/" >/dev/null
-APP_HOME="`pwd -P`"
-cd "$SAVED" >/dev/null
+# Gradle wrapper script
 
-APP_NAME="Gradle"
-APP_BASE_NAME=`basename "$0"`
+# Encontra o diretorio raiz do projeto
+APP_HOME=$(cd "$(dirname "$0")" && pwd)
 
-DEFAULT_JVM_OPTS='"-Xmx64m" "-Xms64m"'
+# Classpath do wrapper
+CLASSPATH="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
 
-CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
-
-# Determine the Java command to use to start the JVM.
-if [ -n "$JAVA_HOME" ] ; then
+# Detecta o Java
+if [ -n "$JAVA_HOME" ]; then
     JAVACMD="$JAVA_HOME/bin/java"
-    if [ ! -x "$JAVACMD" ] ; then
-        die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME"
-    fi
 else
     JAVACMD="java"
-    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH."
 fi
 
-exec "$JAVACMD" $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS \
-  "-Dorg.gradle.appname=$APP_BASE_NAME" \
-  -classpath "$CLASSPATH" \
-  org.gradle.wrapper.GradleWrapperMain \
-  "$@"
+# Verifica se java existe
+if ! command -v "$JAVACMD" > /dev/null 2>&1; then
+    echo "ERRO: Java nao encontrado. Configure JAVA_HOME."
+    exit 1
+fi
+
+# Verifica se o wrapper jar existe
+if [ ! -f "$CLASSPATH" ]; then
+    echo "ERRO: gradle-wrapper.jar nao encontrado em $CLASSPATH"
+    exit 1
+fi
+
+# Executa o Gradle Wrapper - sem DEFAULT_JVM_OPTS problemáticos
+exec "$JAVACMD" \
+    -Xmx512m \
+    -Xms256m \
+    -Dorg.gradle.appname="$(basename "$0")" \
+    -classpath "$CLASSPATH" \
+    org.gradle.wrapper.GradleWrapperMain \
+    "$@"
