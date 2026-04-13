@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Gerador Plus</string>
+
+    <!-- Auth -->
+    <string name="login_title">Gerador Plus</string>
+    <string name="login_subtitle">Faça login para continuar</string>
+    <string name="hint_username">Usuário</string>
+    <string name="hint_password">Senha</string>
+    <string name="btn_login">ENTRAR</string>
+    <string name="btn_logout">Sair</string>
+    <string name="remember_me">Lembrar acesso</string>
+    <string name="error_empty_fields">Preencha usuário e senha</string>
+    <string name="error_invalid_credentials">Usuário ou senha incorretos</string>
+    <string name="error_account_disabled">Conta desativada</string>
+    <string name="error_license_expired">Sua licença expirou. Entre em contato com o administrador.</string>
+
+    <!-- Home -->
+    <string name="trending_movies">🎬 Filmes em Alta</string>
+    <string name="trending_series">📺 Séries Populares</string>
+    <string name="btn_create_banner">🎬 Novo Banner</string>
+    <string name="btn_create_promo">🔥 Promoção</string>
+
+    <!-- Banner Editor -->
+    <string name="banner_editor_title">Criar Banner</string>
+    <string name="btn_select_poster">Selecionar Imagem</string>
+    <string name="btn_generate">🚀 GERAR BANNER</string>
+    <string name="btn_share">Compartilhar</string>
+    <string name="btn_save_gallery">Salvar</string>
+    <string name="banner_generated_success">✅ Banner Gerado!</string>
+    <string name="error_title_required">Título obrigatório</string>
+
+    <!-- Admin -->
+    <string name="dashboard_title">Dashboard</string>
+    <string name="users_title">Usuários</string>
+    <string name="btn_manage_users">👥 Gerenciar Usuários</string>
+    <string name="btn_create_user">Criar Usuário</string>
+    <string name="dialog_create_user_title">Criar Usuário</string>
+    <string name="label_total_users">Total</string>
+    <string name="label_active_users">Ativos</string>
+    <string name="label_expired_users">Expirados</string>
+    <string name="label_trial_users">Testes</string>
+
+    <!-- License -->
+    <string name="license_trial">TESTE</string>
+    <string name="license_monthly">Mensal</string>
+    <string name="license_expired">EXPIRADO</string>
+    <string name="license_active">ATIVO</string>
+    <string name="license_suspended">SUSPENSO</string>
+
+    <!-- Profile -->
+    <string name="profile_title">Perfil</string>
+    <string name="server_name_hint">Nome do Servidor</string>
+    <string name="contact_hint">Contato (WhatsApp, Telegram, etc)</string>
+    <string name="btn_save_info">Salvar Informações</string>
+    <string name="btn_change_logo">Alterar Logo (PNG transparente)</string>
+    <string name="btn_change_password">🔒 Alterar Senha</string>
+
+    <!-- Templates -->
+    <string name="template_dark_cinema">Cinema Dark</string>
+    <string name="template_neon_glow">Neon Glow</string>
+    <string name="template_minimal">Minimal</string>
+    <string name="template_explosive">Explosivo</string>
+    <string name="template_series">Séries</string>
+    <string name="template_promo">Promoção</string>
+
+    <!-- Errors -->
+    <string name="error_generating_banner">Erro ao gerar banner</string>
+    <string name="error_network">Erro de conexão. Verifique sua internet.</string>
+    <string name="error_generic">Ocorreu um erro. Tente novamente.</string>
+
+    <!-- Success -->
+    <string name="success_user_created">Usuário criado com sucesso!</string>
+    <string name="success_license_renewed">Licença renovada com sucesso!</string>
+    <string name="success_saved_gallery">Salvo na galeria!</string>
+    <string name="success_info_saved">Informações salvas!</string>
+    <string name="success_logo_updated">Logo atualizada!</string>
+    <string name="success_password_changed">Senha alterada!</string>
+
+    <!-- File provider authority -->
+    <string name="file_provider_authority" translatable="false">com.geradorplus.fileprovider</string>
+</resources>
