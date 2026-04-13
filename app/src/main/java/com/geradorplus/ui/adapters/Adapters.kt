@@ -21,7 +21,7 @@ import com.google.android.material.chip.Chip
 
 class ContentCardAdapter(
     private var items: List<TmdbContent>,
-    private val imageBaseUrl: String,
+    private var imageBaseUrl: String,
     private val onClick: (TmdbContent) -> Unit
 ) : RecyclerView.Adapter<ContentCardAdapter.ViewHolder>() {
 
@@ -58,6 +58,13 @@ class ContentCardAdapter(
 
     fun updateData(newItems: List<TmdbContent>) {
         items = newItems
+        notifyDataSetChanged()
+    }
+
+    // ✅ CORRIGIDO: método adicionado para atualizar lista e URL base juntos
+    fun updateDataWithBase(newItems: List<TmdbContent>, newImageBaseUrl: String) {
+        items = newItems
+        imageBaseUrl = newImageBaseUrl
         notifyDataSetChanged()
     }
 }
@@ -117,7 +124,7 @@ class BannerListAdapter(
 // ==================== SEARCH RESULT ADAPTER ====================
 
 class SearchResultAdapter(
-    private val imageBaseUrl: String,
+    private var imageBaseUrl: String,
     private val onClick: (TmdbContent) -> Unit
 ) : ListAdapter<TmdbContent, SearchResultAdapter.ViewHolder>(SearchDiffCallback()) {
 
@@ -145,6 +152,12 @@ class SearchResultAdapter(
             .into(holder.ivPoster)
 
         holder.itemView.setOnClickListener { onClick(item) }
+    }
+
+    // ✅ CORRIGIDO: método adicionado para atualizar lista e URL base juntos
+    fun updateWithBase(newItems: List<TmdbContent>, newImageBaseUrl: String) {
+        imageBaseUrl = newImageBaseUrl
+        submitList(newItems)
     }
 
     class SearchDiffCallback : DiffUtil.ItemCallback<TmdbContent>() {
@@ -198,7 +211,6 @@ class UserListAdapter(
             LicenseType.NONE -> "SEM LICENÇA"
         }
 
-        // Color status
         val statusColor = when {
             user.licenseStatus == LicenseStatus.SUSPENDED -> 0xFFFF6B6B.toInt()
             user.isExpired() -> 0xFFFF9800.toInt()
@@ -207,7 +219,6 @@ class UserListAdapter(
         }
         holder.tvStatus.setTextColor(statusColor)
 
-        // Card border color
         holder.card.strokeColor = statusColor
         holder.card.strokeWidth = if (user.isExpired() || user.licenseStatus == LicenseStatus.SUSPENDED) 3 else 0
 
