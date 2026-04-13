@@ -9,7 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
-import androidx.core.widget.addTextChangedListener
+import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.GridLayoutManager
@@ -232,19 +232,22 @@ class SearchFragment : Fragment() {
         }
     }
 
+    // ✅ CORRIGIDO: usa SearchView (searchView) ao invés de etSearch/btnSearch
     private fun setupSearch() {
-        binding.etSearch.addTextChangedListener { text ->
-            val query = text?.toString()?.trim() ?: ""
-            if (query.length >= 2) {
-                viewModel.searchContent(query, currentSearchType)
+        binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                val q = query?.trim() ?: ""
+                if (q.isNotEmpty()) viewModel.searchContent(q, currentSearchType)
+                binding.searchView.clearFocus()
+                return true
             }
-        }
-        binding.btnSearch.setOnClickListener {
-            val query = binding.etSearch.text.toString().trim()
-            if (query.isNotEmpty()) {
-                viewModel.searchContent(query, currentSearchType)
+
+            override fun onQueryTextChange(newText: String?): Boolean {
+                val q = newText?.trim() ?: ""
+                if (q.length >= 2) viewModel.searchContent(q, currentSearchType)
+                return true
             }
-        }
+        })
     }
 
     private fun setupTypeFilter() {
@@ -253,8 +256,9 @@ class SearchFragment : Fragment() {
         binding.chipSeries.setOnClickListener { currentSearchType = SearchType.SERIES; reSearch() }
     }
 
+    // ✅ CORRIGIDO: usa searchView.query ao invés de etSearch.text
     private fun reSearch() {
-        val query = binding.etSearch.text.toString().trim()
+        val query = binding.searchView.query.toString().trim()
         if (query.isNotEmpty()) viewModel.searchContent(query, currentSearchType)
     }
 
