@@ -28,6 +28,13 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Baixar gradle-wrapper.jar oficial
+        run: |
+          mkdir -p gradle/wrapper
+          curl -sL "https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
+            -o gradle/wrapper/gradle-wrapper.jar
+          ls -lh gradle/wrapper/gradle-wrapper.jar
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
@@ -82,6 +89,13 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Baixar gradle-wrapper.jar oficial
+        run: |
+          mkdir -p gradle/wrapper
+          curl -sL "https://github.com/gradle/gradle/raw/v8.4.0/gradle/wrapper/gradle-wrapper.jar" \
+            -o gradle/wrapper/gradle-wrapper.jar
+          ls -lh gradle/wrapper/gradle-wrapper.jar
+
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
 
@@ -106,13 +120,13 @@ jobs:
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "$KEYSTORE_BASE64" | base64 --decode > app/keystore.jks
-            echo "storeFile=keystore.jks"       >> local.properties
-            echo "storePassword=$KEYSTORE_PASSWORD" >> local.properties
-            echo "keyAlias=$KEY_ALIAS"           >> local.properties
-            echo "keyPassword=$KEY_PASSWORD"     >> local.properties
-            echo "Keystore configurado com sucesso"
+            echo "storeFile=keystore.jks"            >> local.properties
+            echo "storePassword=$KEYSTORE_PASSWORD"  >> local.properties
+            echo "keyAlias=$KEY_ALIAS"               >> local.properties
+            echo "keyPassword=$KEY_PASSWORD"         >> local.properties
+            echo "Keystore configurado"
           else
-            echo "Nenhum keystore configurado - build sem assinatura"
+            echo "Sem keystore - build nao assinado"
           fi
 
       - name: Permissao gradlew
