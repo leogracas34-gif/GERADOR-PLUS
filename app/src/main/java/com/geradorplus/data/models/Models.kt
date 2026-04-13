@@ -106,7 +106,8 @@ data class Banner(
     val year: String? = null,
     val rating: Float? = null,
     val promotionText: String? = null, // ex: "50% OFF", "ASSINE JÁ"
-    val isVideo: Boolean = false
+    val isVideo: Boolean = false,
+    val serverName: String? = null
 ) : Parcelable
 
 // ==================== TMDB MODELS ====================
