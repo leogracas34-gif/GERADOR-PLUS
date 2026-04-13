@@ -178,6 +178,11 @@ class AdminViewModel @Inject constructor(
             }
         }
     }
+
+    // ✅ CORRIGIDO: método logout adicionado
+    fun logout() {
+        sessionManager.clearSession()
+    }
 }
 
 sealed class OperationState {
@@ -211,6 +216,10 @@ class BannerViewModel @Inject constructor(
     private val _trendingSeries = MutableLiveData<List<TmdbContent>>()
     val trendingSeries: LiveData<List<TmdbContent>> = _trendingSeries
 
+    // ✅ CORRIGIDO: isLoading adicionado para o SearchFragment observar
+    private val _isLoading = MutableLiveData<Boolean>()
+    val isLoading: LiveData<Boolean> = _isLoading
+
     val currentUser get() = sessionManager.getLoggedUser()
 
     val userBanners get() = currentUser?.let {
@@ -234,8 +243,10 @@ class BannerViewModel @Inject constructor(
         }
     }
 
+    // ✅ CORRIGIDO: isLoading atualizado durante a busca
     fun searchContent(query: String, type: SearchType = SearchType.ALL) {
         viewModelScope.launch {
+            _isLoading.value = true
             val result = when (type) {
                 SearchType.MOVIE -> tmdbRepository.searchMovies(query)
                 SearchType.SERIES -> tmdbRepository.searchSeries(query)
@@ -246,6 +257,7 @@ class BannerViewModel @Inject constructor(
                 is ApiResult.Error -> _searchResults.value = emptyList()
                 else -> {}
             }
+            _isLoading.value = false
         }
     }
 
