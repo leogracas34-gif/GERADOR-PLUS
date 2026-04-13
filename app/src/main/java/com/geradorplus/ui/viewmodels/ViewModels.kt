@@ -224,11 +224,11 @@ class BannerViewModel @Inject constructor(
     private fun loadTrending() {
         viewModelScope.launch {
             when (val result = tmdbRepository.getPopularMovies()) {
-                is ApiResult.Success -> _trendingMovies.value = result.data
+                is ApiResult.Success -> _trendingMovies.value = result.data ?: emptyList()
                 else -> {}
             }
             when (val result = tmdbRepository.getPopularSeries()) {
-                is ApiResult.Success -> _trendingSeries.value = result.data
+                is ApiResult.Success -> _trendingSeries.value = result.data ?: emptyList()
                 else -> {}
             }
         }
@@ -242,7 +242,7 @@ class BannerViewModel @Inject constructor(
                 SearchType.ALL -> tmdbRepository.searchMulti(query)
             }
             when (result) {
-                is ApiResult.Success -> _searchResults.value = result.data
+                is ApiResult.Success -> _searchResults.value = result.data ?: emptyList()
                 is ApiResult.Error -> _searchResults.value = emptyList()
                 else -> {}
             }
