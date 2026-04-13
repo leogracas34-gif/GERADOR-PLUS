@@ -1,6 +1,11 @@
 package com.geradorplus.ui.activities
 
-import android.graphics.*
+import android.content.Intent
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.LinearGradient
+import android.graphics.Paint
+import android.graphics.Shader
 import android.media.MediaCodec
 import android.media.MediaCodecInfo
 import android.media.MediaFormat
@@ -11,14 +16,22 @@ import android.view.View
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
-import com.geradorplus.data.models.Banner
+import androidx.core.content.FileProvider
 import com.geradorplus.databinding.ActivityVideoEditorBinding
 import com.geradorplus.ui.viewmodels.BannerViewModel
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.Date
+import java.util.Locale
+import java.util.Random
+import kotlin.math.sin
 
 @AndroidEntryPoint
 class VideoEditorActivity : AppCompatActivity() {
@@ -41,7 +54,6 @@ class VideoEditorActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityVideoEditorBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setupToolbar()
         setupUI()
     }
@@ -49,7 +61,7 @@ class VideoEditorActivity : AppCompatActivity() {
     private fun setupToolbar() {
         setSupportActionBar(binding.toolbar)
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Criar Vídeo Banner"
+        supportActionBar?.title = "Criar Video Banner"
         binding.toolbar.setNavigationOnClickListener { finish() }
     }
 
@@ -57,7 +69,7 @@ class VideoEditorActivity : AppCompatActivity() {
         binding.btnGenerateVideo.setOnClickListener {
             val title = binding.etTitle.text.toString().trim()
             if (title.isBlank()) {
-                Toast.makeText(this, "Preencha o título", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Preencha o titulo", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
             startVideoGeneration()
@@ -66,14 +78,13 @@ class VideoEditorActivity : AppCompatActivity() {
 
     private fun startVideoGeneration() {
         val user = viewModel.currentUser ?: return
-
         binding.progressVideo.visibility = View.VISIBLE
         binding.btnGenerateVideo.isEnabled = false
-        binding.tvStatus.text = "Gerando vídeo..."
+        binding.tvStatus.text = "Gerando video..."
 
         scope.launch {
             val outputPath = withContext(Dispatchers.IO) {
-                generateVideo(
+                generateVideoInternal(
                     title = binding.etTitle.text.toString(),
                     subtitle = binding.etSubtitle.text.toString(),
                     promoText = binding.etPromoText.text.toString(),
@@ -82,21 +93,19 @@ class VideoEditorActivity : AppCompatActivity() {
                     accentColor = 0xFFE94560.toInt()
                 )
             }
-
             binding.progressVideo.visibility = View.GONE
             binding.btnGenerateVideo.isEnabled = true
-
             if (outputPath != null) {
-                binding.tvStatus.text = "✅ Vídeo gerado com sucesso!"
+                binding.tvStatus.text = "Video gerado com sucesso!"
                 binding.cardResult.visibility = View.VISIBLE
                 setupShareButton(outputPath)
             } else {
-                binding.tvStatus.text = "❌ Erro ao gerar vídeo"
+                binding.tvStatus.text = "Erro ao gerar video"
             }
         }
     }
 
-    private fun generateVideo(
+    private fun generateVideoInternal(
         title: String,
         subtitle: String,
         promoText: String,
@@ -107,7 +116,6 @@ class VideoEditorActivity : AppCompatActivity() {
         return try {
             val dir = File(getExternalFilesDir(null), "GeradorPlus/videos")
             if (!dir.exists()) dir.mkdirs()
-
             val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
             val outputFile = File(dir, "video_$timestamp.mp4")
 
@@ -120,21 +128,18 @@ class VideoEditorActivity : AppCompatActivity() {
 
             val codec = MediaCodec.createEncoderByType(MIME_TYPE)
             codec.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-            val surface = codec.createInputSurface()
+            val surface: Surface = codec.createInputSurface()
             codec.start()
 
             val muxer = MediaMuxer(outputFile.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
             var trackIndex = -1
             var muxerStarted = false
-
             val bufferInfo = MediaCodec.BufferInfo()
 
-            // Draw each frame onto the surface
             for (frameIndex in 0 until TOTAL_FRAMES) {
                 val progress = frameIndex.toFloat() / TOTAL_FRAMES
-                drawFrameToSurface(surface, frameIndex, progress, title, subtitle, promoText, serverName, contact, accentColor)
+                drawFrame(surface, frameIndex, progress, title, subtitle, promoText, serverName, contact, accentColor)
 
-                // Drain encoder
                 var outputDone = false
                 while (!outputDone) {
                     val outputBufferId = codec.dequeueOutputBuffer(bufferInfo, 10_000L)
@@ -148,7 +153,7 @@ class VideoEditorActivity : AppCompatActivity() {
                         outputBufferId >= 0 -> {
                             val encodedData = codec.getOutputBuffer(outputBufferId)
                             if (encodedData != null && muxerStarted && bufferInfo.size > 0) {
-                                bufferInfo.presentationTimeUs = (frameIndex * 1_000_000L / FRAME_RATE)
+                                bufferInfo.presentationTimeUs = frameIndex * 1_000_000L / FRAME_RATE
                                 muxer.writeSampleData(trackIndex, encodedData, bufferInfo)
                             }
                             codec.releaseOutputBuffer(outputBufferId, false)
@@ -158,13 +163,6 @@ class VideoEditorActivity : AppCompatActivity() {
                         }
                     }
                 }
-
-                // Update progress on main thread
-                val progressPercent = ((frameIndex.toFloat() / TOTAL_FRAMES) * 100).toInt()
-                withContext(Dispatchers.Main) {
-                    binding.progressVideo.progress = progressPercent
-                    binding.tvStatus.text = "Gerando vídeo... $progressPercent%"
-                }
             }
 
             codec.signalEndOfInputStream()
@@ -173,7 +171,6 @@ class VideoEditorActivity : AppCompatActivity() {
             surface.release()
             muxer.stop()
             muxer.release()
-
             outputFile.absolutePath
         } catch (e: Exception) {
             e.printStackTrace()
@@ -181,7 +178,7 @@ class VideoEditorActivity : AppCompatActivity() {
         }
     }
 
-    private fun drawFrameToSurface(
+    private fun drawFrame(
         surface: Surface,
         frameIndex: Int,
         progress: Float,
@@ -192,79 +189,56 @@ class VideoEditorActivity : AppCompatActivity() {
         contact: String,
         accentColor: Int
     ) {
-        val canvas = surface.lockCanvas(null)
+        val canvas: Canvas = surface.lockCanvas(null)
         try {
-            // Background
-            canvas.drawColor(Color.parseColor("#0D0D0D"))
-
             val w = VIDEO_WIDTH.toFloat()
             val h = VIDEO_HEIGHT.toFloat()
 
-            // Animated gradient background
-            val animPhase = (frameIndex % 60) / 60f
-            val gradColors = intArrayOf(
-                Color.parseColor("#0D0D0D"),
-                Color.parseColor("#1A0D2E"),
-                Color.parseColor("#0D0D1A")
+            canvas.drawColor(Color.parseColor("#0D0D0D"))
+
+            val grad = LinearGradient(
+                0f, 0f, w, h,
+                intArrayOf(Color.parseColor("#0D0D0D"), Color.parseColor("#1A0D2E"), Color.parseColor("#0D0D1A")),
+                null, Shader.TileMode.CLAMP
             )
-            val grad = LinearGradient(0f, 0f, w, h, gradColors, null, Shader.TileMode.CLAMP)
             canvas.drawRect(0f, 0f, w, h, Paint().apply { shader = grad })
 
-            // Animated particles / stars
+            // Estrelas
             val starPaint = Paint().apply { color = Color.WHITE; isAntiAlias = true }
-            val random = Random(42)
-            repeat(40) {
-                val sx = random.nextFloat() * w
-                val sy = ((random.nextFloat() * h + frameIndex * 2f) % h)
-                val alpha = ((Math.sin(frameIndex * 0.1 + it) + 1) / 2 * 200).toInt()
-                starPaint.alpha = alpha
-                canvas.drawCircle(sx, sy, 2f + random.nextFloat() * 3f, starPaint)
+            val rng = Random(42)
+            repeat(40) { i ->
+                val sx = rng.nextFloat() * w
+                val sy = (rng.nextFloat() * h + frameIndex * 2f) % h
+                starPaint.alpha = ((sin(frameIndex * 0.1 + i) + 1) / 2 * 200).toInt()
+                canvas.drawCircle(sx, sy, 2f + rng.nextFloat() * 3f, starPaint)
             }
 
-            // Animated accent line
+            // Linha accent
+            val linePaint = Paint().apply { color = accentColor; strokeWidth = 6f; isAntiAlias = true }
             val lineProgress = (progress * 1.5f).coerceIn(0f, 1f)
-            val linePaint = Paint().apply {
-                color = accentColor
-                strokeWidth = 6f
-                isAntiAlias = true
-            }
             canvas.drawLine(80f, h * 0.55f, 80f + (w - 160f) * lineProgress, h * 0.55f, linePaint)
 
-            // Title animation — slide in from left
-            val titleX = if (progress < 0.3f) {
-                -w + (w + 80f) * (progress / 0.3f)
-            } else 80f
-            val titlePaint = TextPaint().apply {
-                color = Color.WHITE
-                textSize = 80f
-                isFakeBoldText = true
-                isAntiAlias = true
-            }
-            canvas.drawText(title, titleX, h * 0.60f, titlePaint)
+            // Titulo
+            val titleX = if (progress < 0.3f) -w + (w + 80f) * (progress / 0.3f) else 80f
+            canvas.drawText(title, titleX, h * 0.60f, Paint().apply {
+                color = Color.WHITE; textSize = 80f; isFakeBoldText = true; isAntiAlias = true
+            })
 
-            // Subtitle
+            // Subtitulo
             if (subtitle.isNotBlank()) {
                 val subAlpha = if (progress > 0.4f) ((progress - 0.4f) / 0.2f * 255).toInt().coerceIn(0, 255) else 0
-                val subPaint = TextPaint().apply {
-                    color = Color.parseColor("#AAAAAA")
-                    textSize = 44f
-                    isAntiAlias = true
-                    alpha = subAlpha
-                }
-                canvas.drawText(subtitle, 80f, h * 0.67f, subPaint)
+                canvas.drawText(subtitle, 80f, h * 0.67f, Paint().apply {
+                    color = Color.parseColor("#AAAAAA"); textSize = 44f; isAntiAlias = true; alpha = subAlpha
+                })
             }
 
-            // Promo text — pulse animation
+            // Promo
             if (promoText.isNotBlank()) {
-                val pulse = (Math.sin(frameIndex * 0.15) * 0.1 + 1.0).toFloat()
-                val promoPaint = TextPaint().apply {
-                    color = accentColor
-                    textSize = 72f * pulse
-                    isFakeBoldText = true
-                    isAntiAlias = true
-                }
-                promoPaint.textAlign = Paint.Align.CENTER
-                canvas.drawText(promoText, w / 2f, h * 0.78f, promoPaint)
+                val pulse = (sin(frameIndex * 0.15) * 0.1 + 1.0).toFloat()
+                canvas.drawText(promoText, w / 2f, h * 0.78f, Paint().apply {
+                    color = accentColor; textSize = 72f * pulse; isFakeBoldText = true
+                    isAntiAlias = true; textAlign = Paint.Align.CENTER
+                })
             }
 
             // Bottom bar
@@ -272,14 +246,15 @@ class VideoEditorActivity : AppCompatActivity() {
             canvas.drawLine(0f, h - 200f, w, h - 200f, linePaint)
 
             if (serverName.isNotBlank()) {
-                val botPaint = TextPaint().apply { color = Color.WHITE; textSize = 40f; isFakeBoldText = true; isAntiAlias = true }
-                canvas.drawText(serverName, 60f, h - 120f, botPaint)
+                canvas.drawText(serverName, 60f, h - 120f, Paint().apply {
+                    color = Color.WHITE; textSize = 40f; isFakeBoldText = true; isAntiAlias = true
+                })
             }
             if (contact.isNotBlank()) {
-                val contactPaint = TextPaint().apply { color = Color.parseColor("#AAAAAA"); textSize = 34f; isAntiAlias = true }
-                canvas.drawText(contact, 60f, h - 70f, contactPaint)
+                canvas.drawText(contact, 60f, h - 70f, Paint().apply {
+                    color = Color.parseColor("#AAAAAA"); textSize = 34f; isAntiAlias = true
+                })
             }
-
         } finally {
             surface.unlockCanvasAndPost(canvas)
         }
@@ -288,18 +263,14 @@ class VideoEditorActivity : AppCompatActivity() {
     private fun setupShareButton(filePath: String) {
         binding.btnShareVideo.setOnClickListener {
             val file = File(filePath)
-            val uri = androidx.core.content.FileProvider.getUriForFile(
-                this, "$packageName.fileprovider", file
-            )
-            startActivity(
-                android.content.Intent.createChooser(
-                    android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                        type = "video/mp4"
-                        putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                        addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    }, "Compartilhar Vídeo"
-                )
-            )
+            val uri = FileProvider.getUriForFile(this, "$packageName.fileprovider", file)
+            startActivity(Intent.createChooser(
+                Intent(Intent.ACTION_SEND).apply {
+                    type = "video/mp4"
+                    putExtra(Intent.EXTRA_STREAM, uri)
+                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                }, "Compartilhar Video"
+            ))
         }
     }
 
