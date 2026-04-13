@@ -26,7 +26,7 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         // Chave TMDB — vem de local.properties ou do GitHub Actions Secret
-        buildConfigField "String", "TMDB_API_KEY", "\"${localProps.getProperty('TMDB_API_KEY', '')}\""
+        buildConfigField "String", "TMDB_API_KEY", "\"${localProps.getProperty('9b73f5dd15b8165b1b57419be2f29128', '')}\""
         buildConfigField "String", "TMDB_BASE_URL", "\"https://api.themoviedb.org/3/\""
         buildConfigField "String", "TMDB_IMAGE_URL", "\"https://image.tmdb.org/t/p/w500\""
     }
