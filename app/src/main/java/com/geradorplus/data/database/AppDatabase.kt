@@ -118,7 +118,7 @@ interface BannerDao {
 @Database(
     entities = [User::class, Banner::class],
     version = 1,
-    exportSchema = true
+    exportSchema = false
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
